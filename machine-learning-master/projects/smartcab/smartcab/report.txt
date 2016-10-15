@@ -1,0 +1,43 @@
+# Report Smartcab
+1. Question 1
+* Deadline goes negative
+* I ran it 15 times:
+1. hard time limit of -100, starting at 45
+2. reched after 26 moves
+3. hard time limit
+4. 27
+5. hard time
+6. 124
+7. 56
+8. 33
+9. hard limit
+10. 105
+11. 5
+12. hard limit
+13. 112
+14. 4
+15. hard limit
+16. …
+
+The majority of inputs are almost always None, which indicates low traffic, rewards cary between -1 and 2
+
+2. Question
+I chose the inputs and waypoints to define the different states of the problem as follows:
+
+waypoints = ['forward', 'left', 'right']
+trafficlight = ['red','green']
+oncoming = [None, 'left', 'right', 'forward']
+right = [None, 'left', 'right', 'forward']
+left = [None, 'left', 'right', 'forward']
+
+As other cars can also perform actions at a signal, the values from oncoming, right and left are basically the same as the valid actions from our agent.
+
+In total there are 384 combinations from the values above. This seems at first to be a lot at first, becausewe will have only 100 attempts. Nevertheless, looking at the states and inputs, it seems that there is very low traffic (other vehicles inputs are very often all None), which means that many of the states might come very very rarely and might not be even visited when using the q table later.
+
+3. Question
+
+After implementing the Q-learning formmula as following (Q(s,a) = (1-alpha) * Q(s,a) + alpha * (reward + gamma * max(Q(s',a'))), my car reached in average the destination in 48 out of 100 trials in 30 times I run the proogram. In comparison, when chosing a random action after running the programm 30 times I got an average of 15 times that the car reached its destination. This means, that indeed Q-learning did indeed work substantially better than randmly gussing. (Note alpha=0.5 and gamma=0.5)
+
+
+
+
