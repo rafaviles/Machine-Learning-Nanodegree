@@ -25,7 +25,7 @@ The majority of inputs are almost always None, which indicates low traffic, rewa
 I chose the inputs and waypoints to define the different states of the problem as follows:
 
 waypoints = ['forward', 'left', 'right']
-trafficlight = ['red','green']
+light = ['red','green']
 oncoming = [None, 'left', 'right', 'forward']
 right = [None, 'left', 'right', 'forward']
 left = [None, 'left', 'right', 'forward']
@@ -36,7 +36,15 @@ In total there are 384 combinations from the values above. This seems at first t
 
 3. Question
 
-After implementing the Q-learning formmula as following (Q(s,a) = (1-alpha) * Q(s,a) + alpha * (reward + gamma * max(Q(s',a'))), my car reached in average the destination in 48 out of 100 trials in 30 times I run the proogram. In comparison, when chosing a random action after running the programm 30 times I got an average of 15 times that the car reached its destination. This means, that indeed Q-learning did indeed work substantially better than randmly gussing. (Note alpha=0.5 and gamma=0.5)
+After implementing the Q-learning formmula as following (Q(s,a) = (1-alpha) * Q(s,a) + alpha * (reward + gamma * max(Q(s',a'))), my car reached in average the destination in 48 out of 100 trials in 30 times I run the proogram. In comparison, when chosing a random action after running the programm 30 times I got an average of 15 times that the car reached its destination. This means, that indeed Q-learning did indeed work substantially better than randmly gussing. (Note alpha=0.5 and gamma=0.5).
+
+The reason for this imrpovement, is that the action is now informed by the Q value of the actions at a given state. These include rewards and maximum Q-value of all possible actions at that state. As I initilized Q-values at 0, everytime a new reward is used to update the Q-value, the next time the car reaches that state, he will have a value for the previous action he had taken at that same state. Thus if the action was good it might take it again if it was negative it might take another one with value of 0 for instance.
+
+An important observation was that in the trials, where the car achieved a high number of successes (made it to destination), the final trials were almost always successful and needed always less steps to get to the destination than trials in the middle and the beginning.
+
+
+
+
 
 
 

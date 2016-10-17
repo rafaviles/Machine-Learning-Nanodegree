@@ -12,14 +12,17 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.valid_directions = [None, 'forward', 'left', 'right']
         self.q_table = {}
-        self.alpha = 0.5
-        self.gamma = 0.5
+        self.alpha = 0.45
+        self.gamma = 0.60
         self.previous_state = None
         self.goal_reached_counter = 0
+        self.trials = 100
+        self.trial_counter = 0
         # TODO: Initialize any additional variables here
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
+        self.trial_counter += 1
         # TODO: Prepare for a new trip; reset any variables here, if required
 
     def keywithmaxval(self, d):
@@ -35,7 +38,8 @@ class LearningAgent(Agent):
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
-        epsilon = 0.5/(1+t)
+        epsilon = 0.001/(1+t)
+        
 
         # TODO: Update state
         self.state = [('light',inputs['light']),('oncoming',inputs['oncoming']),('right',inputs['right']),('left',inputs['left']),('next_waypoint',self.next_waypoint)]
@@ -44,13 +48,20 @@ class LearningAgent(Agent):
         def keywithmaxval(d):
         #create a list of the dict's keys and values; 
         #return the key with the max value 
-
             v=list(d.values())
             k=list(d.keys())
             return k[v.index(max(v))]
 
-        dictionary_next_actions = {(str(self.state), None): self.q_table.get((str(self.state), None),0), (str(self.state), 'right'): self.q_table.get((str(self.state), 'right'),0), (str(self.state), 'left'): self.q_table.get((str(self.state), 'left'),0),(str(self.state), 'forward'): self.q_table.get((str(self.state), 'forward'),0)}
+        #Create keys for possible actions
+        state_action_keys = [(str(self.state),direction) for direction in self.valid_directions]
+
+        #Create list of q_table values of possible actions according to current state
+        state_action_values = [self.q_table.get((state_action_key),0) for state_action_key in state_action_keys]
+
+        #Create Dictionary witht he above keys and values to extract the action
+        dictionary_next_actions = {key: value for key, value in zip(state_action_keys,state_action_values)}
         
+        #Take action
         if random.random() < epsilon:
             action = random.choice(self.valid_directions)
         else:
@@ -68,15 +79,18 @@ class LearningAgent(Agent):
         self.previous_state = self.state
         self.previous_action = action
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
-        
+        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}, next_waypoint = {}".format(deadline, inputs, action, reward, self.next_waypoint) # [debug]
+
         if reward >= 10:
             self.goal_reached_counter += 1
 
-        if t == 0:
-            print '****************'+str(self.goal_reached_counter)
-        #print 'Q_TABLE: ' + str(self.q_table)
-        #print '*****************************************'
+        #Store results in external file out.txt
+        if (self.trial_counter == self.trials and deadline <= 0) or (self.trial_counter == self.trials and reward >= 9):
+            with open('out.txt','a') as file:
+                file.write(str(self.goal_reached_counter)+', ') 
+            print 'Achieved destination '+str(self.goal_reached_counter)+' times'
+
+
 
 def run():
     """Run the agent for a finite number of trials."""
@@ -91,8 +105,9 @@ def run():
     sim = Simulator(e, update_delay=0, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
-    sim.run(n_trials=100)  # run for a specified number of trials
+    sim.run(n_trials=a.trials)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+
     
 
 if __name__ == '__main__':
