@@ -12,8 +12,8 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.valid_directions = [None, 'forward', 'left', 'right']
         self.q_table = {}
-        self.alpha = 0.45
-        self.gamma = 0.60
+        self.alpha = 0.5
+        self.gamma = 0.6
         self.previous_state = None
         self.goal_reached_counter = 0
         self.trials = 100
@@ -81,7 +81,7 @@ class LearningAgent(Agent):
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}, next_waypoint = {}".format(deadline, inputs, action, reward, self.next_waypoint) # [debug]
 
-        if reward >= 10:
+        if reward >= 9:
             self.goal_reached_counter += 1
 
         #Store results in external file out.txt
