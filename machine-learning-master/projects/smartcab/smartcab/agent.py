@@ -2,6 +2,7 @@ import random
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
+import numpy as np
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -12,12 +13,13 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         self.valid_directions = [None, 'forward', 'left', 'right']
         self.q_table = {}
-        self.alpha = 0.5
+        self.alpha = 0.7
         self.gamma = 0.6
         self.previous_state = None
         self.goal_reached_counter = 0
         self.trials = 100
         self.trial_counter = 0
+        self.bad_reward_counter = 0
         # TODO: Initialize any additional variables here
 
     def reset(self, destination=None):
@@ -38,11 +40,11 @@ class LearningAgent(Agent):
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
         deadline = self.env.get_deadline(self)
-        epsilon = 0.001/(1+t)
+        epsilon = 0/(1+t)
         
 
-        # TODO: Update state
-        self.state = [('light',inputs['light']),('oncoming',inputs['oncoming']),('right',inputs['right']),('left',inputs['left']),('next_waypoint',self.next_waypoint)]
+        # TODO: Update state - removed ,('right',inputs['right'])
+        self.state = [('light',inputs['light']),('oncoming',inputs['oncoming']),('left',inputs['left']),('next_waypoint',self.next_waypoint)]
         
         # TODO: Select action according to your policy
         def keywithmaxval(d):
@@ -81,14 +83,22 @@ class LearningAgent(Agent):
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}, next_waypoint = {}".format(deadline, inputs, action, reward, self.next_waypoint) # [debug]
 
-        if reward >= 9:
-            self.goal_reached_counter += 1
+        #Count the bad actions in las trial to test optimal policy
+        if (self.trials - 10) < self.trial_counter:
+            if reward == -1:
+                self.bad_reward_counter += 1
 
-        #Store results in external file out.txt
-        if (self.trial_counter == self.trials and deadline <= 0) or (self.trial_counter == self.trials and reward >= 9):
+        #Count times destination is reached only last 10 trials
+        if (self.trials - 10) < self.trial_counter and (reward >= 5):
+            self.goal_reached_counter += 1
+            
+        
+        #Store results in external file out.txt and print on command line
+        if (self.trial_counter == self.trials  and deadline <= 0) or (self.trial_counter == self.trials and reward >= 5):
+
             with open('out.txt','a') as file:
-                file.write(str(self.goal_reached_counter)+', ') 
-            print 'Achieved destination '+str(self.goal_reached_counter)+' times'
+                file.write(str(self.goal_reached_counter)+','+str(self.bad_reward_counter)+"\n") 
+            print 'Out of the last 10 trials achieved destination '+str(self.goal_reached_counter)+' times with '+str(self.bad_reward_counter)+' bad actions'
 
 
 
@@ -108,7 +118,24 @@ def run():
     sim.run(n_trials=a.trials)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
+#Calculate results
+def get_results():
+    
+    #Open file where we were storing results
+    with open('out.txt','r') as file:
+        destination = []
+        bad_moves = []
+
+        #loop through and get numbers
+        for line in file:
+            numbers = line.split(',')
+            destination.append(int(numbers[0]))
+            bad_moves.append(int(numbers[1].rstrip('\n')))
+
+    print 'Average times destination reached per run: '+str(np.mean(destination))
+    print 'Average errors per run: '+str(np.mean(bad_moves))
     
 
 if __name__ == '__main__':
     run()
+    get_results()
